@@ -33,11 +33,26 @@ jobs:
         uses: actions/checkout@v4
       - name: Setup Pages
         uses: actions/configure-pages@v5
+      - name: Prepare project-relative links
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          import posixpath
+          import re
+
+          root = Path("dist")
+          assert (root / "index.html").is_file()
+          pattern = re.compile(r"""((?:href|src)=["']|url\(\s*["']?)/(?!/)([^"'()\s]*)""")
+          for file in root.rglob("*"):
+              if file.suffix not in {".css", ".html"}:
+                  continue
+              prefix = posixpath.relpath(".", file.parent.relative_to(root).as_posix())
+              file.write_text(pattern.sub(lambda match: match[1] + prefix + "/" + match[2], file.read_text()))
+          PY
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
         with:
-          # Upload entire repository
-          path: '.'
+          path: dist
       - name: Deploy to GitHub Pages
         id: deployment
         uses: actions/deploy-pages@v5
