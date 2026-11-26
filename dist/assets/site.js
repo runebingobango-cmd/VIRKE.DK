@@ -24,3 +24,39 @@ controls.hidden=false;
 if(reduced.matches)stop();else start();
 
 }
+
+const taskHero = document.querySelector('.task-hero');
+if (taskHero) {
+  const slides = [...taskHero.querySelectorAll('.task-question')];
+  const photos = taskHero.querySelectorAll('.task-photo');
+  const controls = taskHero.querySelector('.task-controls');
+  const [prev, next, play] = controls.querySelectorAll('button');
+  const status = controls.querySelector('span');
+  const reducedMotion = matchMedia('(prefers-reduced-motion: reduce)');
+  let active = 0;
+  let timer;
+  function step(offset) {
+    slides[active].hidden = true;
+    photos[active].dataset.active = 'false';
+    active = (active + offset + slides.length) % slides.length;
+    slides[active].hidden = false;
+    photos[active].dataset.active = 'true';
+    status.textContent = (active + 1) + ' / ' + slides.length;
+  }
+  function pause() {
+    clearInterval(timer);
+    timer = undefined;
+    play.textContent = 'Afspil';
+  }
+  function start() {
+    timer = setInterval(() => step(1), 12000);
+    play.textContent = 'Pause';
+  }
+  prev.onclick = () => { pause(); step(-1); };
+  next.onclick = () => { pause(); step(1); };
+  play.onclick = () => timer ? pause() : start();
+  taskHero.addEventListener('focusin', event => { if (event.target !== play) pause(); });
+  reducedMotion.addEventListener('change', pause);
+  controls.hidden = false;
+  if (!reducedMotion.matches) start();
+}
